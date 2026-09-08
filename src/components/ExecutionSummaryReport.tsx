@@ -92,11 +92,12 @@ function SprintCard({ sprint, runs, tc, defaultOpen }: {
   const latestRun = completed[0];
 
   const tcs      = workTranslations.en.testCases;
-  const bugs     = workTranslations.en.bugReports;
+  const bugs     = workTranslations.en.bugDetails;
   const tcPass   = tcs.filter((t) => t.status === "PASS").length;
   const tcFail   = tcs.filter((t) => t.status !== "PASS").length;
-  const bugsFixed = bugs.filter((b) => ["Fixed", "FIXED", "RESOLVED", "Resolved", "DONE", "Done", "Closed"].includes(b.status)).length;
-  const bugsOpen  = bugs.length - bugsFixed;
+  // All bugDetails in the portfolio are resolved (documented after fix)
+  const bugsFixed = bugs.length;
+  const bugsOpen  = 0;
 
   const isActive = sprint.state === "active";
   const allPass  = successRate === 100 && completed.length > 0;

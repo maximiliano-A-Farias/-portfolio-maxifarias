@@ -2,11 +2,9 @@ import type { Language } from "./translations";
 
 export type GherkinLine = { keyword: "feature" | "scenario" | "step" | "blank"; text: string };
 
-export type BugReportExample = {
-  id: string;
-  title: string;
-  severity: string;
-  priority: string;
+// Local supplement data — what Jira can't store (Gherkin, steps, fix)
+export type BugDetail = {
+  defKey: string;                                      // matches Jira DEF ticket key
   environment: string;
   device: string;
   browser: string;
@@ -14,14 +12,24 @@ export type BugReportExample = {
   stepsToReproduce?: { action: string; detail?: string }[];
   actualResult?: string;
   expectedResult?: string;
+  fix?: string;
+};
+
+// Shape returned by /api/jira-defects — exported so WorkContent can type it
+export type JiraDefect = {
+  key: string;
+  summary: string;
   status: string;
-  fix: string;
+  statusCategory: string;
+  priority: string;
+  url: string;
+  linkedTickets: string[];
 };
 
 export type TestCase = {
   id: string;
   title: string;
-  bugId: string;
+  bugId: string;            // DEF ticket key (e.g. "DEF-1")
   environment: string;
   device: string;
   browser: string;
@@ -32,6 +40,7 @@ export type TestCase = {
   preconditions: string[];
   steps: { action: string; detail: string }[];
   expectedResult: string[];
+  ticketRef?: string;       // SCRUM ticket (e.g. "SCRUM-8")
 };
 
 export type WorkTranslations = {
@@ -49,45 +58,15 @@ export type WorkTranslations = {
     heading: string;
     subtitle: string;
   };
-  bugReports: BugReportExample[];
+  bugDetails: BugDetail[];
   testCases: TestCase[];
   sections: {
-    sprintBoard: {
-      label: string;
-      heading: string;
-      description: string;
-      empty: string;
-    };
-    testCases: {
-      label: string;
-      heading: string;
-      description: string;
-      empty: string;
-    };
-    bugReports: {
-      label: string;
-      heading: string;
-      description: string;
-      empty: string;
-    };
-    automation: {
-      label: string;
-      heading: string;
-      description: string;
-      empty: string;
-    };
-    apiTesting: {
-      label: string;
-      heading: string;
-      description: string;
-      empty: string;
-    };
-    analytics: {
-      label: string;
-      heading: string;
-      description: string;
-      empty: string;
-    };
+    sprintBoard:  { label: string; heading: string; description: string; empty: string; };
+    testCases:    { label: string; heading: string; description: string; empty: string; };
+    bugReports:   { label: string; heading: string; description: string; empty: string; };
+    automation:   { label: string; heading: string; description: string; empty: string; };
+    apiTesting:   { label: string; heading: string; description: string; empty: string; };
+    analytics:    { label: string; heading: string; description: string; empty: string; };
   };
 };
 
@@ -106,24 +85,21 @@ const en: WorkTranslations = {
     heading: "Real QA work.",
     subtitle: "Bug reports, test cases, automation scripts and test execution reports from real projects.",
   },
-  bugReports: [
+  bugDetails: [
     {
-      id: "BUG-001",
-      title: '"Work →" button not visible on mobile — navigation broken',
-      severity: "High",
-      priority: "High",
+      defKey: "DEF-1",
       environment: "Main",
       device: "Mobile < 640px",
       browser: "Any",
       gherkin: [
-        { keyword: "feature", text: "Feature: Mobile page navigation" },
-        { keyword: "blank",   text: "" },
+        { keyword: "feature",  text: "Feature: Mobile page navigation" },
+        { keyword: "blank",    text: "" },
         { keyword: "scenario", text: "  Scenario: Access the Work page from a mobile device" },
-        { keyword: "step",    text: '    Given the user opens the portfolio on a mobile device (viewport < 640px)' },
-        { keyword: "step",    text: '    When  they look at the navigation bar' },
-        { keyword: "step",    text: '    Then  the "Work →" button should be visible' },
-        { keyword: "step",    text: '    But   the button is hidden inside a "hidden sm:flex" container' },
-        { keyword: "step",    text: '    And   the user has no access to the /work page' },
+        { keyword: "step",     text: '    Given the user opens the portfolio on a mobile device (viewport < 640px)' },
+        { keyword: "step",     text: '    When  they look at the navigation bar' },
+        { keyword: "step",     text: '    Then  the "Work →" button should be visible' },
+        { keyword: "step",     text: '    But   the button is hidden inside a "hidden sm:flex" container' },
+        { keyword: "step",     text: '    And   the user has no access to the /work page' },
       ],
       stepsToReproduce: [
         { action: "Open the portfolio on a mobile device.", detail: "Navigate to the portfolio URL on a real device or set DevTools viewport to 390 × 844px." },
@@ -134,7 +110,6 @@ const en: WorkTranslations = {
       ],
       actualResult: 'The "Work →" button remains hidden on mobile viewports, preventing direct access to /work from the navigation.',
       expectedResult: "The user should be able to see and use the Work access regardless of the viewport.",
-      status: "RESOLVED",
       fix: 'Moved the button outside the hidden <ul> — always visible on any viewport.',
     },
   ],
@@ -142,7 +117,7 @@ const en: WorkTranslations = {
     {
       id: "TC-001",
       title: '"Work →" button visibility on mobile',
-      bugId: "BUG-001",
+      bugId: "DEF-1",
       environment: "Main",
       device: "Mobile < 640px",
       browser: "Any",
@@ -150,6 +125,7 @@ const en: WorkTranslations = {
       testData: "390 × 844px · Chrome",
       fixCommit: "a4e4f7e",
       status: "PASS",
+      ticketRef: "SCRUM-8",
       preconditions: [
         "Portfolio deployed and accessible on Vercel (Main)",
         "Viewport set to < 640px (real device or DevTools)",
@@ -224,12 +200,9 @@ const es: WorkTranslations = {
     heading: "QA en acción.",
     subtitle: "Bug reports, casos de prueba, scripts de automatización y reportes de ejecución de proyectos reales.",
   },
-  bugReports: [
+  bugDetails: [
     {
-      id: "BUG-001",
-      title: 'Botón "Work →" no visible en mobile — navegación rota',
-      severity: "Alta",
-      priority: "Alta",
+      defKey: "DEF-1",
       environment: "Main",
       device: "Mobile < 640px",
       browser: "Cualquier navegador",
@@ -252,7 +225,6 @@ const es: WorkTranslations = {
       ],
       actualResult: 'El botón "Work →" permanece oculto en viewport mobile, impidiendo acceder directamente a /work desde la navegación.',
       expectedResult: "El usuario debería poder visualizar y utilizar el acceso a Work independientemente del viewport.",
-      status: "RESUELTO",
       fix: "Se movió el botón fuera del <ul> oculto — ahora siempre visible en cualquier viewport.",
     },
   ],
@@ -260,7 +232,7 @@ const es: WorkTranslations = {
     {
       id: "TC-001",
       title: 'Visibilidad del botón "Work →" en mobile',
-      bugId: "BUG-001",
+      bugId: "DEF-1",
       environment: "Main",
       device: "Mobile < 640px",
       browser: "Cualquier navegador",
@@ -268,6 +240,7 @@ const es: WorkTranslations = {
       testData: "390 × 844px · Chrome",
       fixCommit: "a4e4f7e",
       status: "PASS",
+      ticketRef: "SCRUM-8",
       preconditions: [
         "Portfolio deployado y accesible en Vercel (Main)",
         "Viewport configurado en < 640px (dispositivo real o DevTools)",
@@ -276,7 +249,7 @@ const es: WorkTranslations = {
         { action: "Abrir el portfolio en mobile", detail: "URL: portfolio-maxifarias.vercel.app · Viewport: 390px" },
         { action: "Observar la barra de navegación superior", detail: "Identificar los elementos visibles en la nav bar" },
         { action: 'Buscar el botón "Work →" en la nav', detail: "Verificar si el botón está presente y visible" },
-        { action: 'Hacer tap en el botón "Work →"', detail: "Interacción táctil en dispositivo real o click en emulador" },
+        { action: 'Hacer tap en el botón "Work →"', detail: "Interacción táctil en dispositivo real o click en emulator" },
         { action: "Verificar que la URL cambia a /work", detail: "La página Work carga correctamente en viewport mobile" },
       ],
       expectedResult: [

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLanguage } from "@/context/LanguageContext";
-import { workTranslations, type BugReportExample, type GherkinLine, type TestCase } from "@/data/workTranslations";
+import { workTranslations, type BugDetail, type JiraDefect, type GherkinLine, type TestCase } from "@/data/workTranslations";
 import RevealSection from "./RevealSection";
 import CypressStatusWidget from "./CypressStatusWidget";
 import SprintBoard from "./SprintBoard";
@@ -182,83 +182,91 @@ function GherkinBlock({ lines }: { lines: GherkinLine[] }) {
   );
 }
 
-function BugReportCard({ report, defaultOpen = true }: { report: BugReportExample; defaultOpen?: boolean }) {
+type MergedBug = JiraDefect & Partial<BugDetail> & { tcRef?: string };
+
+function BugReportCard({ bug, defaultOpen = true }: { bug: MergedBug; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
+  const resolved = bug.statusCategory === "done";
 
   return (
-    <div data-testid={`bugReportCard-${report.id}`} className="rounded-[6px] border border-border overflow-hidden" style={{ background: "var(--surface)" }}>
-      {/* Header — always visible, clickable */}
+    <div data-testid={`bugReportCard-${bug.key}`} className="rounded-[6px] border border-border overflow-hidden" style={{ background: "var(--surface)" }}>
+      {/* Header */}
       <button
-        data-testid={`bugReportToggle-${report.id}`}
+        data-testid={`bugReportToggle-${bug.key}`}
         onClick={() => setOpen(!open)}
         className="w-full text-left px-5 py-4 cursor-pointer transition-opacity duration-150 hover:opacity-80"
         style={{ background: "transparent", borderBottom: open ? "1px solid var(--border)" : "none" }}
       >
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-2">
-            <span className="font-mono text-[0.68rem] text-petrol tracking-[0.1em] uppercase flex-shrink-0">{report.id}</span>
+            <div className="flex items-baseline gap-2 flex-shrink-0 flex-wrap">
+              <a
+                href={bug.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="font-mono text-[0.68rem] text-petrol tracking-[0.1em] uppercase hover:opacity-70 transition-opacity"
+              >
+                {bug.key} ↗
+              </a>
+              {bug.linkedTickets[0] && (
+                <span className="font-mono text-[0.62rem] px-2 py-[1px] rounded-[2px]" style={{ background: "var(--petrol-dim)", color: "var(--petrol)" }}>
+                  {bug.linkedTickets[0]}
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               <span
                 className="font-mono text-[0.65rem] uppercase tracking-[0.1em] px-2 py-[2px] rounded-[2px]"
-                style={{ background: "var(--pass-dim)", color: "var(--pass)" }}
+                style={{
+                  background: resolved ? "var(--pass-dim)" : "var(--fail-dim)",
+                  color:      resolved ? "var(--pass)"     : "var(--fail)",
+                }}
               >
-                ✓ {report.status}
+                {resolved ? "✓ " : ""}{bug.status}
               </span>
-              <span
-                className="font-mono text-[0.7rem] text-text-2 transition-transform duration-200 inline-block"
-                style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
-              >
-                ▾
-              </span>
+              <span className="font-mono text-[0.7rem] text-text-2 transition-transform duration-200 inline-block" style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap justify-end">
-            <span
-              className="font-mono text-[0.65rem] uppercase tracking-[0.08em] px-2 py-[2px] rounded-[2px]"
-              style={{ background: "var(--petrol-dim)", color: "var(--petrol)" }}
-            >
-              Severity: {report.severity}
-            </span>
-            <span
-              className="font-mono text-[0.65rem] uppercase tracking-[0.08em] px-2 py-[2px] rounded-[2px]"
-              style={{ background: "var(--petrol-dim)", color: "var(--petrol)" }}
-            >
-              Priority: {report.priority}
+            <span className="font-mono text-[0.65rem] uppercase tracking-[0.08em] px-2 py-[2px] rounded-[2px]" style={{ background: "var(--petrol-dim)", color: "var(--petrol)" }}>
+              Priority: {bug.priority}
             </span>
           </div>
-          <p className="font-display text-[0.98rem] text-text-1 leading-[1.35]">{report.title}</p>
+          <p className="font-display text-[0.98rem] text-text-1 leading-[1.35]">{bug.summary}</p>
         </div>
       </button>
 
       {/* Collapsible body */}
       {open && (
-        <div data-testid={`bugReportBody-${report.id}`} className="px-5 py-4">
-          <div className="flex flex-wrap gap-x-6 gap-y-1 mb-5">
-            {[
-              ["Env", report.environment],
-              ["Device", report.device],
-              ["Browser", report.browser],
-            ].map(([k, v]) => (
-              <p key={k} className="font-mono text-[0.68rem] text-text-2">
-                <span className="opacity-60">{k}: </span>{v}
-              </p>
-            ))}
-          </div>
-          <GherkinBlock lines={report.gherkin} />
+        <div data-testid={`bugReportBody-${bug.key}`} className="px-5 py-4">
+          {(bug.environment || bug.device || bug.browser) && (
+            <div className="flex flex-wrap gap-x-6 gap-y-1 mb-5">
+              {[["Env", bug.environment], ["Device", bug.device], ["Browser", bug.browser]].map(([k, v]) =>
+                v ? (
+                  <p key={k} className="font-mono text-[0.68rem] text-text-2">
+                    <span className="opacity-60">{k}: </span>{v}
+                  </p>
+                ) : null
+              )}
+            </div>
+          )}
+
+          {bug.gherkin && <GherkinBlock lines={bug.gherkin} />}
 
           {/* Steps to reproduce */}
-          {report.stepsToReproduce && report.stepsToReproduce.length > 0 && (
+          {bug.stepsToReproduce && bug.stepsToReproduce.length > 0 && (
             <div className="mt-4 pt-4 border-t border-border flex flex-col gap-3">
               <span className="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-petrol">Steps to Reproduce</span>
               <div className="flex flex-col gap-0">
-                {report.stepsToReproduce.map((step, i) => (
+                {bug.stepsToReproduce.map((step, i) => (
                   <div key={i} className="flex gap-3 items-start">
                     <div className="flex flex-col items-center flex-shrink-0" style={{ width: 24 }}>
                       <div className="w-6 h-6 rounded-full border flex items-center justify-center font-mono text-[0.55rem] font-bold flex-shrink-0"
                         style={{ borderColor: "var(--petrol)", background: "var(--petrol-dim)", color: "var(--petrol)" }}>
                         {String(i + 1).padStart(2, "0")}
                       </div>
-                      {i < report.stepsToReproduce!.length - 1 && (
+                      {i < bug.stepsToReproduce!.length - 1 && (
                         <div className="w-px flex-1 min-h-[16px]" style={{ background: "var(--border)" }} />
                       )}
                     </div>
@@ -273,27 +281,55 @@ function BugReportCard({ report, defaultOpen = true }: { report: BugReportExampl
           )}
 
           {/* Actual + Expected result */}
-          {(report.actualResult || report.expectedResult) && (
+          {(bug.actualResult || bug.expectedResult) && (
             <div className="mt-2 pt-4 border-t border-border grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {report.actualResult && (
+              {bug.actualResult && (
                 <div className="flex flex-col gap-2">
                   <span className="font-mono text-[0.6rem] uppercase tracking-[0.1em]" style={{ color: "var(--fail)" }}>Actual Result</span>
-                  <p className="font-mono text-[0.7rem] text-text-2 leading-[1.6]">{report.actualResult}</p>
+                  <p className="font-mono text-[0.7rem] text-text-2 leading-[1.6]">{bug.actualResult}</p>
                 </div>
               )}
-              {report.expectedResult && (
+              {bug.expectedResult && (
                 <div className="flex flex-col gap-2">
                   <span className="font-mono text-[0.6rem] uppercase tracking-[0.1em]" style={{ color: "var(--pass)" }}>Expected Result</span>
-                  <p className="font-mono text-[0.7rem] text-text-2 leading-[1.6]">{report.expectedResult}</p>
+                  <p className="font-mono text-[0.7rem] text-text-2 leading-[1.6]">{bug.expectedResult}</p>
                 </div>
               )}
             </div>
           )}
 
-          <div className="mt-4 pt-4 border-t border-border flex gap-2 items-baseline">
-            <span className="font-mono text-[0.65rem] uppercase tracking-[0.08em] text-sage flex-shrink-0">Fix</span>
-            <p data-testid={`bugReportFix-${report.id}`} className="font-mono text-[0.72rem] text-text-2 leading-[1.6]">{report.fix}</p>
-          </div>
+          {bug.fix && (
+            <div className="mt-4 pt-4 border-t border-border flex gap-2 items-baseline">
+              <span className="font-mono text-[0.65rem] uppercase tracking-[0.08em] text-sage flex-shrink-0">Fix</span>
+              <p data-testid={`bugReportFix-${bug.key}`} className="font-mono text-[0.72rem] text-text-2 leading-[1.6]">{bug.fix}</p>
+            </div>
+          )}
+
+          {/* Traceability */}
+          {(bug.linkedTickets[0] || bug.tcRef) && (
+            <div className="mt-4 pt-4 border-t border-border flex flex-wrap items-center gap-2">
+              <span className="font-mono text-[0.6rem] uppercase tracking-[0.1em] text-petrol flex-shrink-0">Traceability</span>
+              {bug.linkedTickets[0] && (
+                <span className="font-mono text-[0.62rem] px-2 py-[2px] rounded-[2px]" style={{ background: "var(--petrol-dim)", color: "var(--petrol)" }}>
+                  {bug.linkedTickets[0]}
+                </span>
+              )}
+              {bug.tcRef && (
+                <>
+                  <span className="font-mono text-[0.6rem] text-text-2">→</span>
+                  <span className="font-mono text-[0.62rem] px-2 py-[2px] rounded-[2px]" style={{ background: "var(--sage-dim)", color: "var(--sage)" }}>
+                    {bug.tcRef}
+                  </span>
+                </>
+              )}
+              <>
+                <span className="font-mono text-[0.6rem] text-text-2">→</span>
+                <span className="font-mono text-[0.62rem] px-2 py-[2px] rounded-[2px]" style={{ background: "var(--ocre-dim)", color: "var(--ocre)" }}>
+                  {bug.key}
+                </span>
+              </>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -350,6 +386,8 @@ function TestCaseCard({ tc }: { tc: TestCase }) {
               ["Test data", tc.testData],
               ["Fix commit", tc.fixCommit],
               ["Browser", tc.browser],
+              ...(tc.ticketRef ? [["Ticket", tc.ticketRef]] : []),
+              ...(tc.bugId     ? [["Defect",      tc.bugId]]   : []),
             ].map(([label, val]) => (
               <div key={label} className="px-4 py-3 flex flex-col gap-1 border-r border-border last:border-r-0">
                 <span className="font-mono text-[0.58rem] uppercase tracking-[0.1em] opacity-60" style={{ color: "var(--text-2)" }}>{label}</span>
@@ -425,6 +463,30 @@ function TestCaseCard({ tc }: { tc: TestCase }) {
 export default function WorkContent() {
   const { lang } = useLanguage();
   const t = workTranslations[lang];
+
+  const [defects, setDefects] = useState<JiraDefect[]>([]);
+  const [loadingDefects, setLoadingDefects] = useState(true);
+
+  useEffect(() => {
+    const fetchDefects = () =>
+      fetch("/api/jira-defects")
+        .then((r) => (r.ok ? r.json() : { defects: [] }))
+        .then((d) => {
+          const next = d.defects ?? [];
+          setDefects((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
+        })
+        .catch(() => {});
+
+    fetchDefects().finally(() => setLoadingDefects(false));
+    const id = setInterval(fetchDefects, 8_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const detailByKey = Object.fromEntries(t.bugDetails.map((d) => [d.defKey, d]));
+  const defToTC: Record<string, string> = {};
+  for (const tc of t.testCases) {
+    if (tc.bugId) defToTC[tc.bugId] = tc.id;
+  }
 
   return (
     <>
@@ -551,7 +613,7 @@ export default function WorkContent() {
                 </p>
 
                 {key === "sprintBoard" ? (
-                  <SprintBoard />
+                  <SprintBoard bugReports={t.bugDetails} testCases={t.testCases} />
                 ) : key === "testCases" ? (
                   <div className="flex flex-col gap-3">
                     {t.testCases.map((tc) => (
@@ -560,9 +622,18 @@ export default function WorkContent() {
                   </div>
                 ) : key === "bugReports" ? (
                   <div className="flex flex-col gap-3">
-                    {t.bugReports.map((report) => (
-                      <BugReportCard key={report.id} report={report} defaultOpen={false} />
-                    ))}
+                    {loadingDefects && defects.length === 0 ? (
+                      <p className="font-mono text-[0.72rem] text-text-2 animate-pulse py-4">loading defects…</p>
+                    ) : (
+                      (defects.length > 0 ? defects : t.bugDetails.map((d) => ({
+                        key: d.defKey, summary: d.defKey, status: "—", statusCategory: "",
+                        priority: "—", url: "", linkedTickets: [] as string[],
+                      } satisfies JiraDefect))).map((jiraDef) => {
+                        const detail = detailByKey[jiraDef.key];
+                        const merged: MergedBug = { ...jiraDef, ...detail, tcRef: defToTC[jiraDef.key] };
+                        return <BugReportCard key={jiraDef.key} bug={merged} defaultOpen={false} />;
+                      })
+                    )}
                   </div>
                 ) : key === "automation" ? (
                   <CypressStatusWidget />

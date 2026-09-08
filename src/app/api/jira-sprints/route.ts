@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 type CacheEntry = { data: unknown; ts: number };
 let cache: CacheEntry | null = null;
-const TTL = 15_000;
+const TTL = 6_000;
 
 const BASE  = process.env.JIRA_BASE_URL!;
 const EMAIL = process.env.JIRA_EMAIL!;

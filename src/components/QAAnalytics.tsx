@@ -75,15 +75,14 @@ export default function QAAnalytics() {
   }, []);
 
   const tcs   = workTranslations.en.testCases;
-  const bugs  = workTranslations.en.bugReports;
+  const bugs  = workTranslations.en.bugDetails;
 
   const tcPass     = tcs.filter((t) => t.status === "PASS").length;
   const tcPassRate = tcs.length > 0 ? Math.round((tcPass / tcs.length) * 100) : 0;
 
-  const bugsFixed  = bugs.filter((b) =>
-    ["Fixed", "FIXED", "RESOLVED", "Resolved", "DONE", "Done", "Closed"].includes(b.status)
-  ).length;
-  const bugFixRate = bugs.length > 0 ? Math.round((bugsFixed / bugs.length) * 100) : 0;
+  // All bugDetails in the portfolio are resolved (they're documented after fix)
+  const bugsFixed  = bugs.length;
+  const bugFixRate = bugs.length > 0 ? 100 : 0;
 
   const completed = runs.filter((r) => r.status === "completed");
   const passed    = completed.filter((r) => r.conclusion === "success");

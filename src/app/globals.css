@@ -206,7 +206,7 @@ body {
   cursor: default;
 }
 
-* { user-select: none; -webkit-user-select: none; }
+button, [role="button"], summary, [draggable] { user-select: none; -webkit-user-select: none; }
 
 a, button, [role="button"], summary, label { cursor: pointer; }
 
