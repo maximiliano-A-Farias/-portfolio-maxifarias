@@ -96,4 +96,4 @@ Quality starts before the first test is executed.
 ## Author
 
 **Maximiliano Farias** · QA Tester Semi-Senior  
-[LinkedIn](https://www.linkedin.com/in/maximilianofarias) · maximiliano.farias@crombie.dev
+[LinkedIn](https://www.linkedin.com/in/maximilianofarias) · maxifarias81@gmail.com
