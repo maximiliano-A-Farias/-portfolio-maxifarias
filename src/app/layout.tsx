@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { DM_Serif_Display, Inter, JetBrains_Mono } from "next/font/google";
 import { LanguageProvider } from "@/context/LanguageContext";
 import Nav from "@/components/Nav";
@@ -53,6 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <main className="flex-1">{children}</main>
           </PageTransition>
         </LanguageProvider>
+        <Analytics />
       </body>
     </html>
   );
