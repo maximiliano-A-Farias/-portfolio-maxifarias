@@ -147,7 +147,7 @@ export default function CypressStatusWidget() {
           <p className="font-mono text-[0.75rem] text-text-2 animate-pulse py-5">fetching runs…</p>
         )}
         {error && (
-          <p className="font-mono text-[0.75rem] text-text-2 py-5">— could not reach GitHub API</p>
+          <p className="font-mono text-[0.75rem] text-text-2 py-5">— could not reach Cypress run status</p>
         )}
         {runs.slice(0, 3).map((run, i) => (
           <RunRow key={run.runNumber} run={run} isLatest={i === 0} />

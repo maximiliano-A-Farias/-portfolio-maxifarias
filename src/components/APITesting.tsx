@@ -6,7 +6,7 @@ type CheckStatus = "idle" | "running" | "pass" | "fail";
 
 type ApiCheck = {
   id: string;
-  api: "Jira" | "CI";
+  api: "Jira" | "Cypress";
   endpoint: string;
   method: "GET";
   assertion: string;
@@ -22,11 +22,11 @@ const CHECKS_DEF: Omit<ApiCheck, "status" | "statusCode" | "responseTime" | "det
   { id: "jira-3", api: "Jira", endpoint: "/api/jira-sprints",   method: "GET", assertion: "At least 1 sprint returned" },
   { id: "jira-4", api: "Jira", endpoint: "/api/jira-sprints",   method: "GET", assertion: "Sprint has `name` and `state`" },
   { id: "jira-5", api: "Jira", endpoint: "/api/jira-sprints",   method: "GET", assertion: "Response time < 5000ms" },
-  { id: "ci-1",   api: "CI",   endpoint: "/api/cypress-status", method: "GET", assertion: "Status 200" },
-  { id: "ci-2",   api: "CI",   endpoint: "/api/cypress-status", method: "GET", assertion: "`runs` field present" },
-  { id: "ci-3",   api: "CI",   endpoint: "/api/cypress-status", method: "GET", assertion: "Last run has `status` field" },
-  { id: "ci-4",   api: "CI",   endpoint: "/api/cypress-status", method: "GET", assertion: "Last run has `conclusion`" },
-  { id: "ci-5",   api: "CI",   endpoint: "/api/cypress-status", method: "GET", assertion: "Response time < 5000ms" },
+  { id: "ci-1",   api: "Cypress", endpoint: "/api/cypress-status", method: "GET", assertion: "Status 200" },
+  { id: "ci-2",   api: "Cypress", endpoint: "/api/cypress-status", method: "GET", assertion: "`runs` field present" },
+  { id: "ci-3",   api: "Cypress", endpoint: "/api/cypress-status", method: "GET", assertion: "Last run has `status` field" },
+  { id: "ci-4",   api: "Cypress", endpoint: "/api/cypress-status", method: "GET", assertion: "Last run has `conclusion`" },
+  { id: "ci-5",   api: "Cypress", endpoint: "/api/cypress-status", method: "GET", assertion: "Response time < 5000ms" },
 ];
 
 type ConnStatus = "unknown" | "connected" | "error";
@@ -144,7 +144,7 @@ export default function APITesting() {
             </div>
             <div className="flex items-center gap-2">
               {connDot(ciConn)}
-              <span className="font-mono text-[0.65rem] text-text-1">GitHub Actions API</span>
+              <span className="font-mono text-[0.65rem] text-text-1">Cypress Runs</span>
               <span
                 className="font-mono text-[0.57rem] uppercase tracking-[0.08em]"
                 style={{ color: ciConn === "connected" ? "var(--pass)" : ciConn === "error" ? "var(--fail)" : "var(--text-2)" }}
@@ -219,7 +219,7 @@ export default function APITesting() {
                       color:      check.api === "Jira" ? "var(--petrol)"     : "var(--ocre)",
                     }}
                   >
-                    {check.api === "Jira" ? "JIRA" : "CI"}
+                    {check.api === "Jira" ? "JIRA" : "CYPRESS"}
                   </span>
                 </td>
 

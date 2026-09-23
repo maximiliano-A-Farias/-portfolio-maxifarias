@@ -173,7 +173,7 @@ const en: WorkTranslations = {
     apiTesting: {
       label: "API Testing",
       heading: "Live checks against real APIs.",
-      description: "Status codes, response shape and key field validation against the Jira and GitHub Actions APIs powering this portfolio.",
+      description: "Status codes, response shape and key field validation against the Jira and Cypress run status APIs powering this portfolio.",
       empty: "Examples coming soon.",
     },
     analytics: {
@@ -288,7 +288,7 @@ const es: WorkTranslations = {
     apiTesting: {
       label: "API Testing",
       heading: "Checks en vivo contra APIs reales.",
-      description: "Validación de status codes, estructura de respuesta y campos clave sobre las APIs de Jira y GitHub Actions que potencian este portfolio.",
+      description: "Validación de status codes, estructura de respuesta y campos clave sobre las APIs de Jira y de estado de Cypress que potencian este portfolio.",
       empty: "Ejemplos próximamente.",
     },
     analytics: {
