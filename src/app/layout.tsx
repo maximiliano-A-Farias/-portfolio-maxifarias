@@ -4,6 +4,7 @@ import { DM_Serif_Display, Inter, JetBrains_Mono } from "next/font/google";
 import { LanguageProvider } from "@/context/LanguageContext";
 import Nav from "@/components/Nav";
 import PageTransition from "@/components/PageTransition";
+import VisitTracker from "@/components/VisitTracker";
 import "./globals.css";
 
 const dmSerifDisplay = DM_Serif_Display({
@@ -55,6 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </PageTransition>
         </LanguageProvider>
         <Analytics />
+        <VisitTracker />
       </body>
     </html>
   );

@@ -58,7 +58,16 @@ JIRA_EMAIL=your@email.com
 JIRA_API_TOKEN=your_token
 JIRA_BOARD_ID=1
 GITHUB_TOKEN=your_github_token
+
+# Optional — email alert every N visits (/api/visit)
+KV_REST_API_URL=https://<your-upstash-db>.upstash.io
+KV_REST_API_TOKEN=your_upstash_token
+RESEND_API_KEY=your_resend_key
+VISIT_ALERT_EMAIL=your@email.com
+VISIT_ALERT_EVERY=5
 ```
+
+Visit `/?notrack=1` once on your own devices to exclude them from the visit count (`/?notrack=0` to undo).
 
 ---
 
